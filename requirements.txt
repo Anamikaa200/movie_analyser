@@ -3,5 +3,5 @@ pandas
 transformers
 torch
 sentencepiece
-protobuf
 accelerate
+protobuf
