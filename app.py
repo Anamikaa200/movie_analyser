@@ -54,20 +54,66 @@ st.write(
 # -----------------------------
 # Sidebar
 # -----------------------------
-st.sidebar.header("Dataset Information")
+st.sidebar.image(
+    "https://upload.wikimedia.org/wikipedia/commons/7/75/Netflix_icon.svg",
+    width=80
+)
 
-st.sidebar.write(f"Total Reviews: **{len(df)}**")
+st.sidebar.title("📊 Sentiment Dashboard")
+st.sidebar.markdown("---")
 
-# Show class distribution only if column exists
 if "Class" in df.columns:
+
     positive = (df["Class"] == "POSITIVE").sum()
     negative = (df["Class"] == "NEGATIVE").sum()
 
-    st.sidebar.success(f"Positive Reviews: {positive}")
-    st.sidebar.error(f"Negative Reviews: {negative}")
+    total = positive + negative
+
+    pos_percent = (positive / total) * 100
+    neg_percent = (negative / total) * 100
+
+    st.sidebar.subheader("😊 Positive Reviews")
+    st.sidebar.progress(pos_percent / 100)
+    st.sidebar.success(f"{pos_percent:.1f}%")
+
+    st.sidebar.subheader("😞 Negative Reviews")
+    st.sidebar.progress(neg_percent / 100)
+    st.sidebar.error(f"{neg_percent:.1f}%")
+
+    st.sidebar.markdown("---")
+
+    st.sidebar.subheader("📈 Sentiment Distribution")
+
+    chart = pd.DataFrame(
+        {
+            "Percentage": [pos_percent, neg_percent]
+        },
+        index=["Positive", "Negative"]
+    )
+
+    st.sidebar.bar_chart(chart)
+
 else:
     st.sidebar.warning("Column 'Class' not found.")
 
+st.sidebar.markdown("---")
+
+st.sidebar.info("""
+### 🤖 Features
+
+✔ AI Sentiment Analysis
+
+✔ Live Prediction
+
+✔ Dataset Visualization
+
+✔ Interactive Dashboard
+
+✔ Hugging Face Transformer
+""")
+
+st.sidebar.markdown("---")
+st.sidebar.success("Made with ❤️ using Streamlit")
 # -----------------------------
 # Tabs
 # -----------------------------
