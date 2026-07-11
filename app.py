@@ -29,7 +29,7 @@ classifier = load_model()
 # ----------------------------------
 @st.cache_data
 def load_data():
-    return pd.read_csv("netflix movie dhurandhar 2.csv", sep=";")
+    return pd.read_csv("df = pd.read_csv("netflix movie dhurandhar 2.csv")
 
 df = load_data()
 
