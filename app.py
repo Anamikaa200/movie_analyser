@@ -2,77 +2,88 @@ import streamlit as st
 import pandas as pd
 from transformers import pipeline
 
-# ----------------------------------
+# -----------------------------
 # Page Configuration
-# ----------------------------------
+# -----------------------------
 st.set_page_config(
     page_title="Netflix Review Analyzer",
     page_icon="🎬",
     layout="wide"
 )
 
-# ----------------------------------
-# Load Model
-# ----------------------------------
+# -----------------------------
+# Load Sentiment Model
+# -----------------------------
 @st.cache_resource
 def load_model():
-    classifier = pipeline(
+    return pipeline(
         "sentiment-analysis",
         model="distilbert-base-uncased-finetuned-sst-2-english"
     )
-    return classifier
 
 classifier = load_model()
 
-# ----------------------------------
+# -----------------------------
 # Load Dataset
-# ----------------------------------
+# -----------------------------
 @st.cache_data
 def load_data():
-    return pd.read_csv("df = pd.read_csv("netflix movie dhurandhar 2.csv")
+    try:
+        # Try comma-separated CSV
+        df = pd.read_csv("netflix movie dhurandhar 2.csv")
+    except Exception:
+        try:
+            # Try semicolon-separated CSV
+            df = pd.read_csv("netflix movie dhurandhar 2.csv", sep=";")
+        except Exception as e:
+            st.error(f"Unable to load dataset: {e}")
+            st.stop()
+
+    return df
 
 df = load_data()
 
-# ----------------------------------
+# -----------------------------
 # Title
-# ----------------------------------
+# -----------------------------
 st.title("🎬 Netflix Movie Review Analyzer")
 st.write(
-    """
-Analyze the sentiment of movie reviews using a Hugging Face Transformer model.
-The app predicts whether a review is **Positive** or **Negative**.
-"""
+    "Analyze movie reviews using a Hugging Face Transformer model."
 )
 
-# ----------------------------------
+# -----------------------------
 # Sidebar
-# ----------------------------------
+# -----------------------------
 st.sidebar.header("Dataset Information")
 
-st.sidebar.write(f"Total Reviews : **{len(df)}**")
+st.sidebar.write(f"Total Reviews: **{len(df)}**")
 
-positive = len(df[df["Class"] == "POSITIVE"])
-negative = len(df[df["Class"] == "NEGATIVE"])
+# Show class distribution only if column exists
+if "Class" in df.columns:
+    positive = (df["Class"] == "POSITIVE").sum()
+    negative = (df["Class"] == "NEGATIVE").sum()
 
-st.sidebar.write(f"Positive Reviews : **{positive}**")
-st.sidebar.write(f"Negative Reviews : **{negative}**")
+    st.sidebar.success(f"Positive Reviews: {positive}")
+    st.sidebar.error(f"Negative Reviews: {negative}")
+else:
+    st.sidebar.warning("Column 'Class' not found.")
 
-# ----------------------------------
+# -----------------------------
 # Tabs
-# ----------------------------------
+# -----------------------------
 tab1, tab2 = st.tabs(["Review Analyzer", "Dataset"])
 
-# ----------------------------------
-# Review Prediction
-# ----------------------------------
+# -----------------------------
+# Review Analyzer
+# -----------------------------
 with tab1:
 
-    st.subheader("Enter Your Review")
+    st.subheader("Enter a Movie Review")
 
     review = st.text_area(
-        "Movie Review",
+        "Review",
         height=180,
-        placeholder="Type your movie review here..."
+        placeholder="Type your review here..."
     )
 
     if st.button("Analyze Review"):
@@ -81,35 +92,45 @@ with tab1:
             st.warning("Please enter a review.")
         else:
 
-            prediction = classifier(review)[0]
+            with st.spinner("Analyzing..."):
 
-            label = prediction["label"]
-            score = prediction["score"]
+                result = classifier(review)[0]
 
-            if label == "POSITIVE":
+            label = result["label"]
+            confidence = result["score"]
+
+            if label.upper() == "POSITIVE":
                 st.success("😊 Positive Review")
             else:
                 st.error("😞 Negative Review")
 
-            st.metric("Confidence", f"{score*100:.2f}%")
+            st.metric(
+                label="Confidence",
+                value=f"{confidence*100:.2f}%"
+            )
 
-# ----------------------------------
-# Dataset Viewer
-# ----------------------------------
+# -----------------------------
+# Dataset
+# -----------------------------
 with tab2:
 
     st.subheader("Dataset Preview")
 
     st.dataframe(df, use_container_width=True)
 
-    st.subheader("Sentiment Distribution")
+    if "Class" in df.columns:
 
-    chart = df["Class"].value_counts()
+        st.subheader("Sentiment Distribution")
 
-    st.bar_chart(chart)
+        chart = df["Class"].value_counts()
 
-# ----------------------------------
+        st.bar_chart(chart)
+
+    else:
+        st.info("No 'Class' column found in dataset.")
+
+# -----------------------------
 # Footer
-# ----------------------------------
+# -----------------------------
 st.markdown("---")
-st.caption("Built with ❤️ using Streamlit and Hugging Face Transformers")
+st.caption("Built with ❤️ using Streamlit & Hugging Face Transformers")
